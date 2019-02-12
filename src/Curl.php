@@ -111,7 +111,7 @@ class Curl
 
     public function parseStatus($status)
     {
-        $this->response['status'] = explode(' ', str_replace('/', ' ', $status), 4);
+        $this->response['status'] = sscanf($status, "%[^/]/%s %d %[^\r\n]");
     }
 
     public function getProtocol()
