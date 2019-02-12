@@ -87,7 +87,7 @@ class Stream
 
     public function parseCookie($cookie)
     {
-        parse_str(str_replace(';', '&', $cookie), $cookies);
+        parse_str(strtr($cookie, array('&' => '%26', '+' => '%2B', ';' => '&')), $cookies);
         return $cookies;
     }
 
@@ -107,7 +107,10 @@ class Stream
                 if ($name == 'Set-Cookie') {
                     $cookie = $this->parseCookie($value);
                     $domain = isset($cookie['domain']) ? $cookie['domain'] : $this->host;
-                    $this->request['cookie'][$domain][] = $value;
+                    if (isset($this->request['cookie'][$domain])) {
+                        $cookie += $this->request['cookie'][$domain];
+                    }
+                    $this->request['cookie'][$domain] = $cookie;
                 }
                 $this->response[$next]['headers'][$name] = $value;
                 $this->response[$next]['header']        .= $line;
@@ -203,7 +206,7 @@ class Stream
         }
         foreach ($this->request['cookie'] as $domain => $cookie) {
             if (substr($this->host, -strlen($domain)) == $domain) {
-                $this->request['options']['headers']['Cookie'] = 'Cookie: ' . implode('; ', $this->request['cookie'][$domain]);
+                $this->request['options']['headers']['Cookie'] = 'Cookie: ' . http_build_query($this->request['cookie'][$domain], '', '; ', PHP_QUERY_RFC3986);
                 break;
             }
         }
