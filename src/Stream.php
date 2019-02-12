@@ -26,7 +26,9 @@ class Stream
                                'headers' => array(
                                                 'Connection' => 'Connection: close'
                                             ),
-                               'options' => array()
+                               'options' => array(
+                                                'headers' => array()
+                                            )
                            );
     protected $response  = array(
                                'status' => array()
@@ -93,8 +95,8 @@ class Stream
     {
         $this->open();
         fwrite($this->handle, $this->request['options']['message']);
-        $this->request['options'] = array(); // destroy the previous request options
-        $next                     = count($this->response);
+        $this->request['options']['headers'] = array(); // destroy the previous request options
+        $next                                = count($this->response);
         $this->response[$next] = array('headers' => array(), 'header' => null, 'body' => null);
         while (!feof($this->handle)) {
             $line = fgets($this->handle);
@@ -215,7 +217,7 @@ class Stream
     public function send()
     {
         static $redirscount = 0;
-        $this->request['options'] or $this->request();
+        $this->request['options']['headers'] or $this->request();
         $response = $this->parseResponse();
         if (isset($response['headers']['Location']) &&
            $response['headers']['Location'] != $this->url &&

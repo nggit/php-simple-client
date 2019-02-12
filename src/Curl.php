@@ -22,6 +22,7 @@ class Curl
     protected $path;
     protected $maxredirs = -1;
     protected $request   = array(
+                               'headers' => array(),
                                'options' => array()
                            );
     protected $response  = array(
