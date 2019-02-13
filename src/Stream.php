@@ -98,8 +98,7 @@ class Stream
         $this->request['options']['headers'] = array(); // destroy the previous request options
         $next                                = count($this->response);
         $this->response[$next] = array('headers' => array(), 'header' => null, 'body' => null);
-        while (!feof($this->handle)) {
-            $line = fgets($this->handle);
+        while ($line = fgets($this->handle)) {
             if (rtrim($line)) {
                 $colon_pos = strpos($line, ':');
                 $name      = substr($line, 0, $colon_pos);
