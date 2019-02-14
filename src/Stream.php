@@ -192,7 +192,7 @@ class Stream
         return $url;
     }
 
-    public function request($method = 'GET', $data = null)
+    public function request($method = 'GET', $data = null) // prepare
     {
         switch ($method) {
             case 'POST':
@@ -225,9 +225,8 @@ class Stream
            $response['headers']['Location'] != $this->url &&
            ($this->maxredirs < 0 || $redirscount < $this->maxredirs)) {
             $redirscount++;
-            $url = $this->url;
-            return $this->setUrl($this->realUrl($response['headers']['Location']))
-                        ->setHeaders(array('Referer: ' . $url))
+            return $this->setHeaders(array('Referer: ' . $this->url))
+                        ->setUrl($this->realUrl($response['headers']['Location']))
                         ->request()
                         ->send();
         } else {
