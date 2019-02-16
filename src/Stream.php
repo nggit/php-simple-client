@@ -114,7 +114,7 @@ class Stream
                 $this->response[$next]['headers'][$name] = $value;
                 $this->response[$next]['header']        .= $line;
             } else {
-                $this->response[$next]['body'] = stream_get_contents($this->handle, -1, strlen($this->response[$next]['header']) + 2);
+                $this->response[$next]['body'] = stream_get_contents($this->handle);
                 break;
             }
         }
@@ -205,7 +205,7 @@ class Stream
         }
         foreach ($this->request['cookie'] as $domain => $cookie) {
             if (substr($this->host, -strlen($domain)) == $domain) {
-                $this->request['options']['headers']['Cookie'] = 'Cookie: ' . http_build_query($this->request['cookie'][$domain], '', '; ', PHP_QUERY_RFC3986);
+                $this->request['options']['headers']['Cookie'] = 'Cookie: ' . str_replace('+', '%20', http_build_query($this->request['cookie'][$domain], '', '; '));
                 break;
             }
         }
