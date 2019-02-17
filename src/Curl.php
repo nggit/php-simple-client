@@ -175,14 +175,17 @@ class Curl
     public function request($method = 'GET', $data = array()) // prepare
     {
         switch ($method) {
+            case 'GET':
+                $this->request['options'][CURLOPT_HTTPGET] = 1;
+                break;
             case 'HEAD':
                 $this->request['options'][CURLOPT_NOBODY] = 1;
                 break;
-            case 'POST':
-                $this->request['options'][CURLOPT_POSTFIELDS] = $data;
-                break;
             default:
-                $this->request['options'][CURLOPT_HTTPGET] = 1;
+                $this->request['options'][CURLOPT_CUSTOMREQUEST] = $method;
+                if ($data) {
+                    $this->request['options'][CURLOPT_POSTFIELDS] = $data;
+                }
         }
         $this->request['options'][CURLOPT_URL]        = $this->url;
         $this->request['options'][CURLOPT_HTTPHEADER] = $this->request['headers'];

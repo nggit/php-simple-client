@@ -197,11 +197,15 @@ class Stream
         switch ($method) {
             case 'POST':
                 if (is_array($data)) {
-                    $data = http_build_query($data, '', '&');
+                    $data                                                = http_build_query($data, '', '&');
+                    $this->request['options']['headers']['Content-Type'] = 'Content-Type: application/x-www-form-urlencoded';
+                } else {
+                    $this->request['headers'] += array('Content-Type' => 'Content-Type: application/x-www-form-urlencoded');
                 }
-                $this->request['options']['headers']['Content-Length'] = 'Content-Length: ' . strlen($data);
-                $this->request['options']['headers']['Content-Type']   = 'Content-Type: application/x-www-form-urlencoded';
                 break;
+        }
+        if (is_string($data)) {
+            $this->request['options']['headers']['Content-Length'] = 'Content-Length: ' . strlen($data);
         }
         foreach ($this->request['cookie'] as $domain => $cookie) {
             if (substr($this->host, -strlen($domain)) == $domain) {
