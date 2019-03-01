@@ -2,7 +2,7 @@
 
 # Curl class
 # PHP Simple Client (PHP cURL)
-# 20190206 nggit
+# (c) 20190206 nggit
 
 namespace Nggit\PHPSimpleClient;
 

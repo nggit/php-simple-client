@@ -2,7 +2,7 @@
 
 # Stream class
 # PHP Simple Client (PHP Stream)
-# 20190206 nggit
+# (c) 20190206 nggit
 
 namespace Nggit\PHPSimpleClient;
 
