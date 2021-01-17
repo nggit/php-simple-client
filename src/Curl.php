@@ -8,19 +8,19 @@ namespace Nggit\PHPSimpleClient;
 
 class Curl
 {
+    protected $debug;
+    protected $maxredirs;
+    protected $url;
+    protected $host;
+    protected $path;
     protected $handle;
     protected $options   = array(
                                CURLOPT_COOKIEFILE     => null,
                                CURLOPT_HEADER         => 1,
                                CURLOPT_ENCODING       => 'gzip, deflate',
                                CURLOPT_RETURNTRANSFER => true,
-                               CURLOPT_SSL_VERIFYPEER => 0,
-                               CURLOPT_TIMEOUT        => 10
+                               CURLOPT_SSL_VERIFYPEER => 0
                            );
-    protected $url;
-    protected $host;
-    protected $path;
-    protected $maxredirs = -1;
     protected $request   = array(
                                'headers' => array(),
                                'options' => array()
@@ -28,6 +28,13 @@ class Curl
     protected $response  = array(
                                'status' => array()
                            );
+
+    public function __construct($debug = false, $maxredirs = -1, $timeout = 30)
+    {
+        $this->debug                    = $debug;
+        $this->maxredirs                = $maxredirs;
+        $this->options[CURLOPT_TIMEOUT] = $timeout;
+    }
 
     protected function open()
     {
@@ -51,7 +58,7 @@ class Curl
     public function setHeaders($headers = array())
     {
         foreach ($headers as $header) {
-            $this->request['headers'][substr($header, 0, strpos($header, ':'))] = $header;
+            $this->request['headers'][ucwords(substr($header, 0, strpos($header, ':')), '-')] = $header;
         }
         return $this;
     }
@@ -59,7 +66,7 @@ class Curl
     public function setUrl($url)
     {
         $this->url = $url;
-        if (strpos($url, '://') === false || !($url = parse_url($url))) {
+        if (!strpos($url, '://') || !($url = parse_url($url))) {
             throw new \Exception('Invalid url or not an absolute url');
         }
         $this->host = $url['host'];
@@ -86,20 +93,26 @@ class Curl
         if (!($response = curl_exec($this->handle))) {
             throw new \Exception(curl_error($this->handle) . ' (' . curl_errno($this->handle) . ')');
         }
-        $tok  = strtok($response, "\n");
-        $next = count($this->response);
-        $this->response[$next] = array('headers' => array(), 'header' => null, 'body' => null);
+        if ($this->debug) {
+            printf("%s\r\n----------------\r\n", rtrim(curl_getinfo($this->handle, CURLINFO_HEADER_OUT)));
+        }
+        $tok                   = strtok($response, "\n");
+        $next                  = count($this->response);
+        $this->response[$next] = array('headers' => array(), 'header' => '', 'body' => '');
         while ($tok !== false) {
-            if (rtrim($tok)) {
-                $colon_pos                                                     = strpos($tok, ':');
-                $this->response[$next]['headers'][substr($tok, 0, $colon_pos)] = trim(substr($tok, $colon_pos), ": \r");
-                $this->response[$next]['header']                              .= $tok . "\n";
-            } else {
-                $this->response[$next]['body'] = substr($response, strlen($this->response[$next]['header']) + 2);
+            if (rtrim($tok) == '') {
                 break;
             }
+            $colon_pos = strpos($tok, ':');
+            if ($colon_pos === false) {
+                $this->response[$next]['headers'][0] = rtrim($tok);
+            } else {
+                $this->response[$next]['headers'][ucwords(substr($tok, 0, $colon_pos), '-')] = trim(substr($tok, $colon_pos), ": \r");
+            }
+            $this->response[$next]['header'] .= $tok . "\n";
             $tok = strtok("\n");
         }
+        $this->response[$next]['body'] = substr($response, curl_getinfo($this->handle, CURLINFO_HEADER_SIZE));
         return $this->response[$next];
     }
 
@@ -111,7 +124,7 @@ class Curl
 
     public function parseStatus($status)
     {
-        $this->response['status'] = sscanf($status, "%[^/]/%s %d %[^\r\n]");
+        $this->response['status'] = (array) sscanf($status, "%[^/]/%s %d %[^\r\n]") + array('', '', '', '');
     }
 
     public function getProtocol()
@@ -144,7 +157,7 @@ class Curl
     {
         $response = end($this->response);
         return is_null($header) ? $response['header']
-                                : (isset($response['headers'][$header]) ? $response['headers'][$header] : null);
+                                : (isset($response['headers'][$header]) ? $response['headers'][$header] : '');
     }
 
     public function getBody()
@@ -189,6 +202,9 @@ class Curl
         }
         $this->request['options'][CURLOPT_URL]        = $this->url;
         $this->request['options'][CURLOPT_HTTPHEADER] = $this->request['headers'];
+        if ($this->debug) {
+            $this->request['options'][CURLINFO_HEADER_OUT] = true;
+        }
         return $this;
     }
 
@@ -204,13 +220,12 @@ class Curl
             $redirscount++;
             return $this->setHeaders(array('Referer: ' . $this->url))
                         ->setUrl($this->realUrl($response['headers']['Location']))
-                        ->request()
                         ->send();
         } else {
-            $this->parseStatus($this->getHeader('')); // last status
+            $this->parseStatus($this->getHeader(0)); // last status
             $this->close();
             $redirscount = 0;
-            return $this;
+            return $this->setHeaders(array('Referer: ' . $this->url));
         }
     }
 }
