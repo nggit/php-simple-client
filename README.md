@@ -1,5 +1,5 @@
 # PHP Simple Client
-A Simple and Fast HTTP CLient
+A Simple and Fast HTTP Client, designed to be out of the box. There is also a [simpleclient](https://github.com/nggit/simpleclient) written in Python.
 ## Quick Start
 There are two versions, using cURL or native PHP Stream.
 ### 1. cURL version
@@ -26,7 +26,7 @@ echo $client->getHeader();
 # Content-Type: text/html; charset=UTF-8
 # ...
 
-echo $client->getHeader('');
+echo $client->getHeader(0);
 # HTTP/1.1 200 OK
 
 echo $client->getHeader('Content-Type');
