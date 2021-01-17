@@ -8,19 +8,20 @@ namespace Nggit\PHPSimpleClient;
 
 class Stream
 {
+    protected $debug;
+    protected $maxredirs;
+    protected $timeout;
+    protected $url;
+    protected $host;
+    protected $path;
     protected $handle;
+    protected $socket;
     protected $options   = array(
                                'ssl' => array(
                                             'verify_peer'      => false,
                                             'verify_peer_name' => false
                                         )
                            );
-    protected $url;
-    protected $host;
-    protected $path;
-    protected $socket;
-    protected $maxredirs = -1;
-    protected $timeout   = 10;
     protected $request   = array(
                                'cookie'  => array(),
                                'headers' => array(
@@ -33,6 +34,13 @@ class Stream
     protected $response  = array(
                                'status' => array()
                            );
+
+    public function __construct($debug = false, $maxredirs = -1, $timeout = 30)
+    {
+        $this->debug     = $debug;
+        $this->maxredirs = $maxredirs;
+        $this->timeout   = $timeout;
+    }
 
     protected function open()
     {
@@ -49,7 +57,7 @@ class Stream
     public function setHeaders($headers = array())
     {
         foreach ($headers as $header) {
-            $this->request['headers'][substr($header, 0, strpos($header, ':'))] = $header;
+            $this->request['headers'][ucwords(substr($header, 0, strpos($header, ':')), '-')] = $header;
         }
         return $this;
     }
@@ -57,7 +65,7 @@ class Stream
     public function setUrl($url)
     {
         $this->url = $url;
-        if (strpos($url, '://') === false || !($url = parse_url($url))) {
+        if (!strpos($url, '://') || !($url = parse_url($url))) {
             throw new \Exception('Invalid url or not an absolute url');
         }
         $this->host = $url['host'];
@@ -97,26 +105,38 @@ class Stream
         fwrite($this->handle, $this->request['options']['message']);
         $this->request['options']['headers'] = array(); // destroy the previous request options
         $next                                = count($this->response);
-        $this->response[$next] = array('headers' => array(), 'header' => null, 'body' => null);
+        $this->response[$next]               = array('headers' => array(), 'header' => '', 'body' => '');
+        $cookies                             = array();
         while ($line = fgets($this->handle)) {
-            if (rtrim($line)) {
-                $colon_pos = strpos($line, ':');
-                $name      = substr($line, 0, $colon_pos);
-                $value     = trim(substr($line, $colon_pos), ": \r\n");
-                if ($name == 'Set-Cookie') {
-                    $cookie = $this->parseCookie($value);
-                    $domain = isset($cookie['domain']) ? $cookie['domain'] : $this->host;
-                    if (isset($this->request['cookie'][$domain])) {
-                        $cookie += $this->request['cookie'][$domain];
-                    }
-                    $this->request['cookie'][$domain] = $cookie;
-                }
-                $this->response[$next]['headers'][$name] = $value;
-                $this->response[$next]['header']        .= $line;
-            } else {
-                $this->response[$next]['body'] = stream_get_contents($this->handle);
+            if (rtrim($line) == '') {
                 break;
             }
+            $colon_pos = strpos($line, ':');
+            if ($colon_pos === false) {
+                $this->response[$next]['headers'][0] = rtrim($line);
+            } else {
+                $name  = ucwords(substr($line, 0, $colon_pos), '-');
+                $value = trim(substr($line, $colon_pos), ": \r\n");
+                if ($name == 'Set-Cookie') {
+                    $cookies[] = $value;
+                }
+                $this->response[$next]['headers'][$name] = $value;
+            }
+            $this->response[$next]['header'] .= $line;
+        }
+        $this->response[$next]['body'] = stream_get_contents($this->handle);
+        if ($cookies) {
+            $cookie = $this->parseCookie(implode('; ', $cookies));
+            $domain = $this->host;
+            foreach ($cookie as $name => $value) {
+                if (strtolower($name) == 'domain') {
+                    $domain = $value;
+                }
+            }
+            if (isset($this->request['cookie'][$domain])) {
+                $cookie += $this->request['cookie'][$domain];
+            }
+            $this->request['cookie'][$domain] = $cookie;
         }
         $this->close();
         return $this->response[$next];
@@ -130,7 +150,7 @@ class Stream
 
     public function parseStatus($status)
     {
-        $this->response['status'] = sscanf($status, "%[^/]/%s %d %[^\r\n]");
+        $this->response['status'] = (array) sscanf($status, "%[^/]/%s %d %[^\r\n]") + array('', '', '', '');
     }
 
     public function getProtocol()
@@ -163,7 +183,7 @@ class Stream
     {
         $response = end($this->response);
         return is_null($header) ? $response['header']
-                                : (isset($response['headers'][$header]) ? $response['headers'][$header] : null);
+                                : (isset($response['headers'][$header]) ? $response['headers'][$header] : '');
     }
 
     public function getBody()
@@ -192,9 +212,9 @@ class Stream
         return $url;
     }
 
-    public function request($method = 'GET', $data = null) // prepare
+    public function request($method = 'GET', $data = '') // prepare
     {
-        switch ($method) {
+        switch (strtoupper($method)) {
             case 'POST':
                 if (is_array($data)) {
                     $data                                                = http_build_query($data, '', '&');
@@ -204,12 +224,16 @@ class Stream
                 }
                 break;
         }
-        if (is_string($data)) {
+        if ($data == '') {
+            if (isset($this->request['headers']['Content-Type'])) {
+                unset($this->request['headers']['Content-Type']);
+            }
+        } else {
             $this->request['options']['headers']['Content-Length'] = 'Content-Length: ' . strlen($data);
         }
         foreach ($this->request['cookie'] as $domain => $cookie) {
             if (substr($this->host, -strlen($domain)) == $domain) {
-                $this->request['options']['headers']['Cookie'] = 'Cookie: ' . str_replace('+', '%20', http_build_query($this->request['cookie'][$domain], '', '; '));
+                $this->request['options']['headers']['Cookie'] = 'Cookie: ' . str_replace('+', '%20', http_build_query($cookie, '', '; '));
                 break;
             }
         }
@@ -217,6 +241,9 @@ class Stream
         $this->request['options']['headers'] += $this->request['headers'];
         $this->request['options']['message']  = sprintf("%s %s HTTP/1.0\r\n%s\r\n\r\n%s",
                                                         $method, $this->path, implode("\r\n", $this->request['options']['headers']), $data);
+        if ($this->debug) {
+            printf("%s\r\n----------------\r\n", rtrim($this->request['options']['message']));
+        }
         return $this;
     }
 
@@ -231,12 +258,11 @@ class Stream
             $redirscount++;
             return $this->setHeaders(array('Referer: ' . $this->url))
                         ->setUrl($this->realUrl($response['headers']['Location']))
-                        ->request()
                         ->send();
         } else {
-            $this->parseStatus($this->getHeader('')); // last status
+            $this->parseStatus($this->getHeader(0)); // last status
             $redirscount = 0;
-            return $this;
+            return $this->setHeaders(array('Referer: ' . $this->url));
         }
     }
 }
