@@ -103,8 +103,7 @@ class Curl
             if (rtrim($tok) == '') {
                 break;
             }
-            $colon_pos = strpos($tok, ':');
-            if ($colon_pos === false) {
+            if (($colon_pos = strpos($tok, ':')) === false) {
                 $this->response[$next]['headers'][0] = rtrim($tok);
             } else {
                 $this->response[$next]['headers'][ucwords(substr($tok, 0, $colon_pos), '-')] = trim(substr($tok, $colon_pos), ": \r");

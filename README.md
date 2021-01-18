@@ -47,10 +47,11 @@ $client->setUrl('https://www.google.com/') // required to set an url
 ### Setting Headers To Be Sent
 Setting Headers must be done before calling `request()` and `send()`.
 ```php
-$headers   = array();
-$headers[] = 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0';
-$headers[] = 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8';
-$headers[] = 'Accept-Language: en-US,en;q=0.5';
+$headers = array(
+    'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0',
+    'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language: en-US,en;q=0.5'
+);
 
 $client->setHeaders($headers);
 ```

@@ -111,8 +111,7 @@ class Stream
             if (rtrim($line) == '') {
                 break;
             }
-            $colon_pos = strpos($line, ':');
-            if ($colon_pos === false) {
+            if (($colon_pos = strpos($line, ':')) === false) {
                 $this->response[$next]['headers'][0] = rtrim($line);
             } else {
                 $name  = ucwords(substr($line, 0, $colon_pos), '-');
