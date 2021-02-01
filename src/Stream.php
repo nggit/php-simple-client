@@ -251,9 +251,10 @@ class Stream
         static $redirscount = 0;
         $this->request['options']['headers'] or $this->request();
         $response = $this->parseResponse();
-        if (isset($response['headers']['Location']) &&
-           $response['headers']['Location'] != $this->url &&
-           ($this->maxredirs < 0 || $redirscount < $this->maxredirs)) {
+        if (
+            isset($response['headers']['Location']) && $response['headers']['Location'] != $this->url
+            && ($this->maxredirs < 0 || $redirscount < $this->maxredirs)
+        ) {
             $redirscount++;
             return $this->setHeaders(array('Referer: ' . $this->url))
                         ->setUrl($this->realUrl($response['headers']['Location']))
