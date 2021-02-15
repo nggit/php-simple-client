@@ -13,6 +13,7 @@ class Stream
     protected $timeout;
     protected $url;
     protected $host;
+    protected $netloc;
     protected $path;
     protected $handle;
     protected $socket;
@@ -69,14 +70,24 @@ class Stream
             throw new \Exception('Invalid url or not an absolute url');
         }
         $this->host = $url['host'];
-        $this->path = isset($url['path']) ? substr($this->url, strpos($this->url, $this->host) + strlen($this->host)) : '/';
         if (stripos($this->url, 'https://') === 0) {
             $transport = 'ssl';
-            isset($url['port']) or $url['port'] = 443;
+            if (isset($url['port'])) {
+                $this->netloc = $this->host . ':' . $url['port'];
+            } else {
+                $this->netloc = $this->host;
+                $url['port']  = 443;
+            }
         } else {
             $transport = 'tcp';
-            isset($url['port']) or $url['port'] = 80;
+            if (isset($url['port'])) {
+                $this->netloc = $this->host . ':' . $url['port'];
+            } else {
+                $this->netloc = $this->host;
+                $url['port']  = 80;
+            }
         }
+        $this->path   = isset($url['path']) ? substr($this->url, strpos($this->url, $this->netloc) + strlen($this->netloc)) : '/';
         $this->socket = $transport . '://' . $url['host'] . ':' . $url['port'];
         return $this;
     }
@@ -194,7 +205,7 @@ class Stream
     protected function realUrl($url)
     {
         if (strpos($url, '://') === false) { // relative url
-            $path_pos = strpos($this->url, $this->host) + strlen($this->host);
+            $path_pos = strpos($this->url, $this->netloc) + strlen($this->netloc);
             if ($url[0] == '/') {
                 $url = substr($this->url, 0, $path_pos) . $url;
             } else {

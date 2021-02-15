@@ -12,6 +12,7 @@ class Curl
     protected $maxredirs;
     protected $url;
     protected $host;
+    protected $netloc;
     protected $path;
     protected $handle;
     protected $options   = array(
@@ -69,8 +70,9 @@ class Curl
         if (!strpos($url, '://') || !($url = parse_url($url))) {
             throw new \Exception('Invalid url or not an absolute url');
         }
-        $this->host = $url['host'];
-        $this->path = isset($url['path']) ? $url['path'] : '/';
+        $this->host   = $url['host'];
+        $this->netloc = isset($url['port']) ? $this->host . ':' . $url['port'] : $this->host;
+        $this->path   = isset($url['path']) ? $url['path'] : '/';
         return $this;
     }
 
@@ -168,7 +170,7 @@ class Curl
     protected function realUrl($url)
     {
         if (strpos($url, '://') === false) { // relative url
-            $path_pos = strpos($this->url, $this->host) + strlen($this->host);
+            $path_pos = strpos($this->url, $this->netloc) + strlen($this->netloc);
             if ($url[0] == '/') {
                 $url = substr($this->url, 0, $path_pos) . $url;
             } else {
