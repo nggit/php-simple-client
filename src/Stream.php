@@ -72,23 +72,19 @@ class Stream
         $this->host = $url['host'];
         if (stripos($this->url, 'https://') === 0) {
             $transport = 'ssl';
-            if (isset($url['port'])) {
-                $this->netloc = $this->host . ':' . $url['port'];
-            } else {
-                $this->netloc = $this->host;
-                $url['port']  = 443;
-            }
+            $port      = 443;
         } else {
             $transport = 'tcp';
-            if (isset($url['port'])) {
-                $this->netloc = $this->host . ':' . $url['port'];
-            } else {
-                $this->netloc = $this->host;
-                $url['port']  = 80;
-            }
+            $port      = 80;
+        }
+        if (isset($url['port'])) {
+            $port         = $url['port'];
+            $this->netloc = $this->host . ':' . $port;
+        } else {
+            $this->netloc = $this->host;
         }
         $this->path   = isset($url['path']) ? substr($this->url, strpos($this->url, $this->netloc) + strlen($this->netloc)) : '/';
-        $this->socket = $transport . '://' . $url['host'] . ':' . $url['port'];
+        $this->socket = $transport . '://' . $url['host'] . ':' . $port;
         return $this;
     }
 
