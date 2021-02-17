@@ -1,8 +1,8 @@
 <?php
 
-# Curl class
-# PHP Simple Client (PHP cURL)
-# (c) 20190206 nggit
+# PHP Simple Client (PHP cURL).
+# https://github.com/nggit/php-simple-client
+# Copyright (c) 2019 nggit.
 
 namespace Nggit\PHPSimpleClient;
 

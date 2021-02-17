@@ -1,8 +1,8 @@
 <?php
 
-# Stream class
-# PHP Simple Client (PHP Stream)
-# (c) 20190206 nggit
+# PHP Simple Client (PHP Stream).
+# https://github.com/nggit/php-simple-client
+# Copyright (c) 2019 nggit.
 
 namespace Nggit\PHPSimpleClient;
 
