@@ -12,6 +12,17 @@ $client = new Nggit\PHPSimpleClient\Curl();
 require 'src/Stream.php';
 $client = new Nggit\PHPSimpleClient\Stream();
 ```
+You can just use a stand-alone PHP file like that, or use a [wrapper class](src/Client.php). At first, install it via composer:
+```
+composer require nggit/php-simple-client
+```
+Then, you can do something like this:
+```php
+require __DIR__ . '/vendor/autoload.php';
+use Nggit\PHPSimpleClient\Client;
+$client = Client::create(); // default backend is 'stream'
+$client = Client::create('curl'); // if you want to use the 'curl' backend
+```
 ## Example
 ### Simple GET
 ```php
