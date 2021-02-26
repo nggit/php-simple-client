@@ -58,7 +58,7 @@ class Stream
     public function setHeaders($headers = array())
     {
         foreach ($headers as $header) {
-            $this->request['headers'][ucwords(substr($header, 0, strpos($header, ':')), '-')] = $header;
+            $this->request['headers'][str_replace(' ', '-', ucwords(str_replace('-', ' ', substr($header, 0, strpos($header, ':')))))] = $header;
         }
         return $this;
     }
@@ -121,7 +121,7 @@ class Stream
             if (($colon_pos = strpos($line, ':')) === false) {
                 $this->response[$next]['headers'][0] = rtrim($line);
             } else {
-                $name  = ucwords(substr($line, 0, $colon_pos), '-');
+                $name  = str_replace(' ', '-', ucwords(str_replace('-', ' ', substr($line, 0, $colon_pos))));
                 $value = trim(substr($line, $colon_pos), ": \r\n");
                 if ($name == 'Set-Cookie') {
                     $cookies[] = $value;

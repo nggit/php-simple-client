@@ -59,7 +59,7 @@ class Curl
     public function setHeaders($headers = array())
     {
         foreach ($headers as $header) {
-            $this->request['headers'][ucwords(substr($header, 0, strpos($header, ':')), '-')] = $header;
+            $this->request['headers'][str_replace(' ', '-', ucwords(str_replace('-', ' ', substr($header, 0, strpos($header, ':')))))] = $header;
         }
         return $this;
     }
@@ -108,7 +108,7 @@ class Curl
             if (($colon_pos = strpos($tok, ':')) === false) {
                 $this->response[$next]['headers'][0] = rtrim($tok);
             } else {
-                $this->response[$next]['headers'][ucwords(substr($tok, 0, $colon_pos), '-')] = trim(substr($tok, $colon_pos), ": \r");
+                $this->response[$next]['headers'][str_replace(' ', '-', ucwords(str_replace('-', ' ', substr($tok, 0, $colon_pos))))] = trim(substr($tok, $colon_pos), ": \r");
             }
             $this->response[$next]['header'] .= $tok . "\n";
             $tok = strtok("\n");
