@@ -229,6 +229,9 @@ class Stream
                     $this->request['headers'] += array('Content-Type' => 'Content-Type: application/x-www-form-urlencoded');
                 }
                 break;
+            case 'HEAD':
+                $this->setMaxRedirs(0);
+                break;
         }
         if ($data == '') {
             if (isset($this->request['headers']['Content-Type'])) {

@@ -194,6 +194,7 @@ class Curl
                 break;
             case 'HEAD':
                 $this->request['options'][CURLOPT_NOBODY] = 1;
+                $this->setMaxRedirs(0);
                 break;
             default:
                 $this->request['options'][CURLOPT_CUSTOMREQUEST] = $method;
