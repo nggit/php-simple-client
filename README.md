@@ -20,8 +20,14 @@ Then, you can do something like this:
 ```php
 require __DIR__ . '/vendor/autoload.php';
 use Nggit\PHPSimpleClient\Client;
+
 $client = Client::create(); // default backend is 'stream'
 $client = Client::create('curl'); // if you want to use the 'curl' backend
+// alternative way:
+$client = (new Client())->stream();
+// you can also use the options:
+$client = (new Client(['debug' => true, 'timeout' => 60]))->curl();
+$client = (new Client())->curl(true, -1, 60); // debug, maxredirs, timeout
 ```
 ## Example
 ### Simple GET

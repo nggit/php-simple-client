@@ -68,7 +68,7 @@ class Curl
     {
         $this->url = $url;
         if (!strpos($url, '://') || !($url = parse_url($url))) {
-            throw new \Exception('Invalid url or not an absolute url');
+            throw new \Exception('Invalid URL or not an absolute URL');
         }
         $this->host   = $url['host'];
         $this->netloc = isset($url['port']) ? $this->host . ':' . $url['port'] : $this->host;

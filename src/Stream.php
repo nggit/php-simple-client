@@ -67,7 +67,7 @@ class Stream
     {
         $this->url = $url;
         if (!strpos($url, '://') || !($url = parse_url($url))) {
-            throw new \Exception('Invalid url or not an absolute url');
+            throw new \Exception('Invalid URL or not an absolute URL');
         }
         $this->host = $url['host'];
         if (stripos($this->url, 'https://') === 0) {
